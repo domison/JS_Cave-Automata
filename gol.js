@@ -15,4 +15,16 @@ function generateGrid() {
 }
 
 const grid = generateGrid();
-console.log(grid);
+render(grid);
+
+function render(grid) {
+	for (let col = 0; col < grid.length; col++) {
+		for (let row = 0; row < grid.length; row++) {
+			const cell = grid[col][row];
+
+			context.beginPath();
+			context.rect(col * resolution, row * resolution, resolution, resolution);
+			context.stroke();
+		}
+	}
+}
