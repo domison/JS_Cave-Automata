@@ -3,9 +3,9 @@
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 
-const resolution = 40;
-canvas.width = 400;
-canvas.height = 400;
+const resolution = 10;
+canvas.width = 800;
+canvas.height = 800;
 
 const COLS = canvas.width / resolution;
 const ROWS = canvas.height / resolution;
@@ -72,8 +72,9 @@ function render(grid) {
 			context.beginPath();
 			context.rect(col * resolution, row * resolution, resolution, resolution);
 			context.fillStyle = cell ? 'blue' : 'white';
-			context.stroke();
+			context.strokeStyle = 'grey';
 			context.fill();
+			context.stroke();
 		}
 	}
 }
