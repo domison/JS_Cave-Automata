@@ -3,25 +3,40 @@
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 
-const resolution = 10;
-canvas.width = 800;
-canvas.height = 800;
+// let canvas take up two thirds of browser responsively
+canvas.width = window.innerWidth * (2 / 3);
+canvas.height = window.innerHeight * (2 / 3);
 
-const COLS = canvas.width / resolution;
-const ROWS = canvas.height / resolution;
+// ensure that canvas is a square on all viewports and orientations
+canvas.height <= canvas.width
+	? (canvas.width = canvas.height)
+	: (canvas.height = canvas.width);
+
+// for now resolution and with it cell size sits at 1/64
+const resolution = Math.floor(canvas.width / 64);
+
+const COLS = Math.floor(canvas.width / resolution);
+const ROWS = Math.floor(canvas.height / resolution);
+
+class Cell {
+	constructor() {
+		this.currentState = Math.floor(Math.random() * 2);
+	}
+
+	setState(state) {
+		this.currentState = state;
+	}
+}
 
 function generateGrid() {
 	return new Array(COLS)
 		.fill(null)
-		.map(() =>
-			new Array(ROWS).fill(null).map(() => Math.floor(Math.random() * 2))
-		);
+		.map(() => new Array(ROWS).fill(null).map(() => new Cell()));
 }
 
 let grid = generateGrid();
 requestAnimationFrame(update);
 
-// console.log(grid);
 function update() {
 	grid = nextGen(grid);
 	render(grid);
@@ -29,12 +44,16 @@ function update() {
 }
 function nextGen(grid) {
 	// create exact copy of the grid array
-	const nextGen = grid.map((array) => [...array]);
+	const currentGen = grid.map((array) =>
+		array.map((cell) => cell.currentState)
+	);
+	// const nextGen = grid.map((array) => [...array]);
 
-	for (let col = 0; col < grid.length; col++) {
-		for (let row = 0; row < grid.length; row++) {
-			const cell = grid[col][row];
+	for (let col = 0; col < currentGen.length; col++) {
+		for (let row = 0; row < currentGen[col].length; row++) {
+			const cell = currentGen[col][row];
 			let numberOfNeighbors = 0;
+
 			// find the direct neighbors of each cell
 			for (let i = -1; i < 2; i++) {
 				for (let j = -1; j < 2; j++) {
@@ -45,7 +64,7 @@ function nextGen(grid) {
 					const y_cell = row + j;
 
 					if (x_cell >= 0 && y_cell >= 0 && x_cell < COLS && y_cell < ROWS) {
-						let currentNeighbor = grid[col + i][row + j];
+						const currentNeighbor = currentGen[col + i][row + j];
 						numberOfNeighbors += currentNeighbor;
 					}
 				}
@@ -53,25 +72,26 @@ function nextGen(grid) {
 
 			// apply standard rules
 			if (cell === 1 && numberOfNeighbors < 2) {
-				nextGen[col][row] = 0;
+				grid[col][row].setState(0);
 			} else if (cell === 1 && numberOfNeighbors > 3) {
-				nextGen[col][row] = 0;
+				grid[col][row].setState(0);
 			} else if (cell === 0 && numberOfNeighbors === 3) {
-				nextGen[col][row] = 1;
+				grid[col][row].setState(1);
+			} else {
+				grid[col][row].setState(grid[col][row].currentState);
 			}
 		}
 	}
-	return nextGen;
+	return grid;
 }
 
 function render(grid) {
 	for (let col = 0; col < grid.length; col++) {
-		for (let row = 0; row < grid.length; row++) {
+		for (let row = 0; row < grid[col].length; row++) {
 			const cell = grid[col][row];
-
 			context.beginPath();
 			context.rect(col * resolution, row * resolution, resolution, resolution);
-			context.fillStyle = cell ? 'blue' : 'white';
+			context.fillStyle = cell.currentState ? 'blue' : 'white';
 			context.strokeStyle = 'grey';
 			context.fill();
 			context.stroke();
