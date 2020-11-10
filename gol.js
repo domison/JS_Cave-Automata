@@ -18,6 +18,54 @@ const resolution = Math.floor(canvas.width / 64);
 const COLS = Math.floor(canvas.width / resolution);
 const ROWS = Math.floor(canvas.height / resolution);
 
+class Game {
+	constructor(Board, Algorithm, canvas) {
+		this.board = Board;
+		this.rule = Algorithm.current;
+		this.canvas = canvas;
+	}
+	advanceBoard(iterations = 1) {
+		const currentGrid = this.board.grid.map(
+			(array) => array.map((cell) => cell.currentState) // 0 or 1
+		);
+		const newGrid = new Board().grid;
+
+		for (let col = 0; col < currentGrid.length; col++) {
+			for (let row = 0; row < currentGrid[col].length; row++) {
+				const cell = currentGrid[col][row]; // 0 or 1
+				const numberOfNeighbors = countNeighbors(currentGrid, col, row);
+				const newState = applyRules(cell, numberOfNeighbors, ...this.rule);
+
+				newGrid[col][row].setState(newState);
+			}
+		}
+		this.board.grid = newGrid;
+	}
+}
+class Board {
+	constructor() {
+		this.COLS = Math.floor(canvas.width / resolution);
+		this.ROWS = Math.floor(canvas.height / resolution);
+		this.resolution = Math.floor(canvas.width / 64);
+		this.grid = this.resetGrid();
+
+		Board.history.push(this);
+	}
+	randomizeGrid() {
+		return new Array(this.COLS)
+			.fill(null)
+			.map(() => new Array(this.ROWS).fill(null).map(() => new Cell()));
+	}
+
+	resetGrid() {
+		return new Array(this.COLS)
+			.fill(null)
+			.map(() => new Array(this.ROWS).fill(null));
+	}
+
+	// stores boards in array, for redo, undo etc.
+	static history = [];
+}
 class Algorithm {
 	constructor() {
 		this.current = new Array([2, 3], [3]); // standard rule-set
@@ -29,17 +77,25 @@ class Algorithm {
 }
 
 class Cell {
-	constructor() {
-		this.currentState = Math.floor(Math.random() * 2);
+	constructor(state = -1) {
+		if (state < 0) {
+			this.currentState = Math.floor(Math.random() * 2);
+		} else {
+			this.currentState = state;
+		}
 	}
-
 	setState(state) {
 		this.currentState = state;
+	}
+
+	toggleState() {
+		this.currentState = -this.currentState + 1;
 	}
 }
 
 let grid = generateGrid();
 requestAnimationFrame(loop);
+let rule = new Algorithm();
 
 function generateGrid() {
 	return new Array(COLS)
@@ -47,16 +103,21 @@ function generateGrid() {
 		.map(() => new Array(ROWS).fill(null).map(() => new Cell()));
 }
 
-let rule = new Algorithm();
-
 // apply B678/S345678
-// rule.setRules([
+// rule.setRule([
 // 	[6, 7, 8],
 // 	[3, 4, 5, 6, 7, 8],
 // ]);
 
-function loop() {
-	grid = nextGen(grid);
+function step(rule, iterations = 1) {
+	for (let i = 0; i < iterations; i++) {
+		grid = nextGen(grid, rule);
+		render(grid);
+	}
+}
+
+function loop(rule) {
+	grid = nextGen(grid, rule);
 	render(grid);
 	requestAnimationFrame(loop);
 }
