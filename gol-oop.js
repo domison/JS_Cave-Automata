@@ -83,7 +83,6 @@ class Game {
 	progressBoard(iterations = 1) {
 		const currentGrid = [...this.board.grid];
 		const newBoard = new Board(this.board.algorithm);
-		console.log(newBoard);
 		for (let i = 0; i < iterations; i++) {
 			for (let col = 0; col < currentGrid.length; col++) {
 				for (let row = 0; row < currentGrid[col].length; row++) {
@@ -120,7 +119,6 @@ class Board {
 				: this.resetGrid();
 	}
 	randomizeGrid() {
-		console.log();
 		return new Array(display.cols)
 			.fill(null)
 			.map(() => new Array(display.rows).fill(null).map(() => new Cell(-1)));
@@ -198,11 +196,10 @@ class Cell {
 		this.state = -this.state + 1;
 	}
 }
+
 let display = new Display();
 let game = new Game(new Board(new Algorithm()));
 game.board.grid = game.board.randomizeGrid();
-console.log(display);
-console.log(game.board);
 display.render(game.board.grid);
 game.progressBoard(1);
 game.progressBoard(1);
@@ -215,7 +212,5 @@ function loop() {
 	requestAnimationFrame(loop);
 }
 
-// TODO: Refactor grid/currentGen so it can advanced by steps
-// TODO: create way for user to apply B678/S345678 for cave-building algorithm
-
-// TODO: create way for user to apply B678/S345678 for cave-building algorithm
+// TODO: create a way for user to apply B678/S345678 as cave-building algorithm
+// TODO: add event listeners
