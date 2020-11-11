@@ -1,6 +1,4 @@
-.vscode
-.cave-generator
-.gol-inspiration
+.*
 
 
 # Node.gitignore
