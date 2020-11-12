@@ -22,8 +22,8 @@ class Display {
 			'Play',
 			'Undo',
 			'Conway',
-			'CaveAI',
-			'Smoothen',
+			'Caive',
+			'Aisle',
 			'Terrain',
 			'Clear',
 			'Random',
@@ -50,7 +50,7 @@ class Display {
 						game.progressBoard(20);
 						this.render(game.board.grid);
 						break;
-					case this.buttons[3]: // cave
+					case this.buttons[3]: // caive1
 						// apply B678/S345678
 						game.board.algorithm.setRule([
 							// [2, 3, 4, 5, 6, 7, 8],
@@ -61,8 +61,8 @@ class Display {
 						game.progressBoard(20);
 						this.render(game.board.grid);
 						break;
-					case this.buttons[4]: // smoothen
-						// apply B678/S345678
+					case this.buttons[4]: // caive2
+						// apply B5678/S5678
 						game.board.algorithm.setRule([
 							[5, 6, 7, 8],
 							[5, 6, 7, 8],
@@ -311,5 +311,6 @@ function loop() {
 	requestAnimationFrame(loop);
 }
 
-// TODO: create a way for user to apply B678/S345678 as cave-building algorithm
-// TODO: add event listeners
+// TODO: fix issue with stop play button (Not possible to stop as of now, stacks)
+// TODO: Make redo button workable or scrap it as not really essential to function
+// TODO: Create short functions for instant cave and island making
