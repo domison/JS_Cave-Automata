@@ -18,8 +18,75 @@ class Display {
 		// div
 		this.container = document.getElementById('container');
 		// btn
-		this.btnNames = ['Go', 'Redo', 'Loop', 'CaveAI', 'Smoothen'];
+		this.btnNames = [
+			'Play',
+			'Undo',
+			'Conway',
+			'Caive',
+			'Aisle',
+			'Terrain',
+			'Clear',
+			'Random',
+		];
 		this.buttons = this.addButtons(this.btnNames);
+		this.buttons = document.querySelectorAll('button');
+		this.buttons.forEach((btn) => {
+			return btn.addEventListener('click', (event) => {
+				switch (event.target) {
+					case this.buttons[0]: // play
+						if (btn.textContent != 'Play') {
+							btn.textContent = 'Play';
+						} else {
+							btn.textContent = 'Stop';
+						}
+						loop();
+						break;
+					case this.buttons[1]: // step
+						game.regressBoard();
+						this.render(game.board.grid);
+						break;
+					case this.buttons[2]: // conway
+						game.board.algorithm.setRule([[2, 3], [3]]);
+						game.progressBoard(20);
+						this.render(game.board.grid);
+						break;
+					case this.buttons[3]: // caive1
+						// apply B678/S345678
+						game.board.algorithm.setRule([
+							// [2, 3, 4, 5, 6, 7, 8],
+							// [5, 6, 7, 8],
+							[3, 4, 5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(20);
+						this.render(game.board.grid);
+						break;
+					case this.buttons[4]: // caive2
+						// apply B5678/S5678
+						game.board.algorithm.setRule([
+							[5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(1);
+						this.render(game.board.grid);
+						break;
+					case this.buttons[5]: // Terrain
+						game.board.makeIntoTerrain();
+						game.board.terrain = true;
+						this.render(game.board.grid);
+
+						break;
+					case this.buttons[6]: // clear
+						game.board.resetGrid();
+						this.render(game.board.grid);
+						break;
+					case this.buttons[7]: // randomize
+						game.board.randomizeGrid();
+						this.render(game.board.grid);
+						break;
+				}
+			});
+		});
 	}
 
 	addButtons(names) {
@@ -36,12 +103,13 @@ class Display {
 		}
 		return document.querySelectorAll('btn');
 	}
-	render(grid) {
+	render(grid, factor = 0) {
 		for (let col = 0; col < grid.length; col++) {
 			for (let row = 0; row < grid[col].length; row++) {
 				const cell = grid[col][row];
 				this.context.beginPath();
-				this.context.fillStyle = cell.state ? 'blue' : 'white';
+				this.context.fillStyle =
+					cell.state === 0 ? 'white' : cell.state === 3 ? 'brown' : 'blue';
 				this.context.rect(
 					col * this.resolution,
 					row * this.resolution,
@@ -87,6 +155,11 @@ class Game {
 			for (let col = 0; col < currentGrid.length; col++) {
 				for (let row = 0; row < currentGrid[col].length; row++) {
 					const cell = currentGrid[col][row]; // 0 or 1
+					if (cell.state === 3) {
+						newBoard.grid[col][row].setState(3);
+						continue;
+					}
+
 					const numberOfNeighbors = this.board.countNeighbors(
 						currentGrid,
 						col,
@@ -103,10 +176,12 @@ class Game {
 	}
 
 	regressBoard() {
-		this.board = Board.history[Game.round--];
+		if (Game.round > 0) {
+			this.board = Board.history[Game.round--];
+		}
 	}
 
-	static round = 0;
+	static round = -1;
 }
 class Board {
 	// stores boards in array, for redo, undo etc.
@@ -117,19 +192,41 @@ class Board {
 			Board.history.length != 0
 				? Board.history[Game.round].grid
 				: this.resetGrid();
+		this.terrain = false;
 	}
 	randomizeGrid() {
-		return new Array(display.cols)
-			.fill(null)
-			.map(() => new Array(display.rows).fill(null).map(() => new Cell(-1)));
+		if (!this.terrain) {
+			return (this.grid = new Array(display.cols)
+				.fill(null)
+				.map(() => new Array(display.rows).fill(null).map(() => new Cell(-1))));
+		} else {
+			return (this.grid = this.grid.map((row) =>
+				row.map((cell) => {
+					if (cell.state !== 3) {
+						return new Cell(-1);
+					}
+					return cell;
+				})
+			));
+		}
 	}
 
 	resetGrid() {
-		return new Array(display.cols)
+		return (this.grid = new Array(display.cols)
 			.fill(null)
-			.map(() => new Array(display.rows).fill(null).map(() => new Cell(0)));
+			.map(() => new Array(display.rows).fill(null).map(() => new Cell(0))));
 	}
 
+	makeIntoTerrain() {
+		return (this.grid = this.grid.map((row) =>
+			row.map((cell) => {
+				if (cell.state !== 0) {
+					cell.state = 3;
+				}
+				return cell;
+			})
+		));
+	}
 	countNeighbors(grid, col, row) {
 		let numberOfNeighbors = 0;
 
@@ -149,7 +246,9 @@ class Board {
 					y_cell < display.rows
 				) {
 					const currentNeighbor = grid[col + i][row + j].state;
-					numberOfNeighbors += currentNeighbor;
+					if (currentNeighbor !== 3) {
+						numberOfNeighbors += currentNeighbor;
+					}
 				}
 			}
 		}
@@ -212,5 +311,6 @@ function loop() {
 	requestAnimationFrame(loop);
 }
 
-// TODO: create a way for user to apply B678/S345678 as cave-building algorithm
-// TODO: add event listeners
+// TODO: fix issue with stop play button (Not possible to stop as of now, stacks)
+// TODO: Make redo button workable or scrap it as not really essential to function
+// TODO: Create short functions for instant cave and island making
