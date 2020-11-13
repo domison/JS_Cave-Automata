@@ -27,6 +27,9 @@ class Display {
 			'Terrain',
 			'Clear',
 			'Random',
+			'Instant Cave',
+			'Instant Isles',
+			'Instant Worms',
 		];
 		this.buttons = this.addButtons(this.btnNames);
 		this.buttons = document.querySelectorAll('button');
@@ -34,35 +37,43 @@ class Display {
 			return btn.addEventListener('click', (event) => {
 				switch (event.target) {
 					case this.buttons[0]: // play
+						game.board.algorithm.setRule([[2, 3], [3]]);
+						game.notGOL = false;
 						if (btn.textContent != 'Play') {
 							btn.textContent = 'Play';
+							game.isLooped = false;
 						} else {
 							btn.textContent = 'Stop';
+							game.isLooped = true;
 						}
 						loop();
 						break;
-					case this.buttons[1]: // step
+					case this.buttons[1]: // undo
 						game.regressBoard();
 						this.render(game.board.grid);
+						btn.toggleAttribute('disabled');
 						break;
 					case this.buttons[2]: // conway
+						game.notGOL = false;
+
 						game.board.algorithm.setRule([[2, 3], [3]]);
-						game.progressBoard(20);
+						game.progressBoard(1);
 						this.render(game.board.grid);
 						break;
-					case this.buttons[3]: // caive1
+					case this.buttons[3]: // caveAI
+						game.notGOL = true;
+
 						// apply B678/S345678
 						game.board.algorithm.setRule([
 							// [2, 3, 4, 5, 6, 7, 8],
 							// [5, 6, 7, 8],
 							[3, 4, 5, 6, 7, 8],
-							[5, 6, 7, 8],
+							[6, 7, 8],
 						]);
-						game.progressBoard(20);
+						game.progressBoard(1);
 						this.render(game.board.grid);
 						break;
-					case this.buttons[4]: // caive2
-						// apply B5678/S5678
+					case this.buttons[4]: // AIsland
 						game.board.algorithm.setRule([
 							[5, 6, 7, 8],
 							[5, 6, 7, 8],
@@ -71,10 +82,10 @@ class Display {
 						this.render(game.board.grid);
 						break;
 					case this.buttons[5]: // Terrain
-						game.board.makeIntoTerrain();
+						game.terrainOn = !game.terrainOn;
+						game.board.toggleTerrain();
 						game.board.terrain = true;
 						this.render(game.board.grid);
-
 						break;
 					case this.buttons[6]: // clear
 						game.board.resetGrid();
@@ -82,6 +93,71 @@ class Display {
 						break;
 					case this.buttons[7]: // randomize
 						game.board.randomizeGrid();
+						this.render(game.board.grid);
+						break;
+					case this.buttons[8]: // instant cave
+						game.board.randomizeGrid();
+						game.board.algorithm.setRule([
+							[3, 4, 5, 6, 7, 8],
+							[6, 7, 8],
+						]);
+						game.progressBoard(1);
+						game.board.algorithm.setRule([
+							[5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(1);
+						game.board.algorithm.setRule([
+							[3, 4, 5, 6, 7, 8],
+							[6, 7, 8],
+						]);
+						game.progressBoard(10);
+						game.board.makeIntoTerrain();
+						this.render(game.board.grid);
+						break;
+					case this.buttons[9]: // instant isles
+						game.notGOL = false;
+
+						game.board.randomizeGrid();
+						game.board.algorithm.setRule([
+							[2, 3, 4, 5, 6, 7, 8],
+							[6, 7, 8],
+						]);
+						game.progressBoard(1);
+
+						game.board.algorithm.setRule([
+							[5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(8);
+						game.board.algorithm.setRule([
+							[3, 4, 5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(10);
+						game.board.makeIntoTerrain();
+						this.render(game.board.grid);
+						break;
+					case this.buttons[10]: // instant worms
+						game.board.randomizeGrid();
+
+						game.board.algorithm.setRule([
+							[2, 3, 4, 5, 6, 7, 8],
+							[6, 7, 8],
+						]);
+						game.progressBoard(Math.ceil(Math.random() * 20));
+						game.board.algorithm.setRule([
+							[5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(Math.ceil(Math.random() * 10) + 2);
+
+						game.board.algorithm.setRule([
+							[3, 4, 5, 6, 7, 8],
+							[5, 6, 7, 8],
+						]);
+						game.progressBoard(10);
+						game.board.makeIntoTerrain();
 						this.render(game.board.grid);
 						break;
 				}
@@ -103,7 +179,7 @@ class Display {
 		}
 		return document.querySelectorAll('btn');
 	}
-	render(grid, factor = 0) {
+	render(grid) {
 		for (let col = 0; col < grid.length; col++) {
 			for (let row = 0; row < grid[col].length; row++) {
 				const cell = grid[col][row];
@@ -116,11 +192,15 @@ class Display {
 					this.resolution,
 					this.resolution
 				);
-				this.context.strokeStyle = 'grey';
+				this.context.strokeStyle = 'white';
 				this.context.fill();
+
 				this.context.stroke();
 			}
 		}
+
+		this.context.strokeStyle = 'blue';
+		this.context.stroke;
 	}
 	createDOMElement({
 		content = '',
@@ -147,11 +227,16 @@ class Display {
 class Game {
 	constructor(Board) {
 		this.board = Board;
+		this.isLooped = false;
+		this.notGOL = false;
+		this.terrainOn = false;
 	}
 	progressBoard(iterations = 1) {
-		const currentGrid = [...this.board.grid];
-		const newBoard = new Board(this.board.algorithm);
 		for (let i = 0; i < iterations; i++) {
+			const currentGrid = [...this.board.grid];
+			const newBoard = new Board(this.board.algorithm);
+			Board.history[++Game.round] = this.board;
+
 			for (let col = 0; col < currentGrid.length; col++) {
 				for (let row = 0; row < currentGrid[col].length; row++) {
 					const cell = currentGrid[col][row]; // 0 or 1
@@ -159,7 +244,6 @@ class Game {
 						newBoard.grid[col][row].setState(3);
 						continue;
 					}
-
 					const numberOfNeighbors = this.board.countNeighbors(
 						currentGrid,
 						col,
@@ -170,9 +254,12 @@ class Game {
 					newBoard.grid[col][row].state;
 				}
 			}
+			Board.history[++Game.round] = this.board;
+			this.board = newBoard;
 		}
-		Board.history[++Game.round] = this.board;
-		this.board = newBoard;
+
+		let btn = display.buttons[1];
+		if (btn.getAttribute('disabled') !== null) btn.toggleAttribute('disabled');
 	}
 
 	regressBoard() {
@@ -217,15 +304,26 @@ class Board {
 			.map(() => new Array(display.rows).fill(null).map(() => new Cell(0))));
 	}
 
-	makeIntoTerrain() {
-		return (this.grid = this.grid.map((row) =>
-			row.map((cell) => {
-				if (cell.state !== 0) {
-					cell.state = 3;
-				}
-				return cell;
-			})
-		));
+	toggleTerrain() {
+		if (game.terrainOn) {
+			return (this.grid = this.grid.map((row) =>
+				row.map((cell) => {
+					if (cell.state !== 0) {
+						cell.state = 3;
+					}
+					return cell;
+				})
+			));
+		} else {
+			return (this.grid = this.grid.map((row) =>
+				row.map((cell) => {
+					if (cell.state === 3) {
+						cell.state = 1;
+					}
+					return cell;
+				})
+			));
+		}
 	}
 	countNeighbors(grid, col, row) {
 		let numberOfNeighbors = 0;
@@ -242,12 +340,17 @@ class Board {
 				if (
 					x_cell >= 0 &&
 					y_cell >= 0 &&
-					x_cell < display.cols &&
-					y_cell < display.rows
+					x_cell < display.cols - 0 &&
+					y_cell < display.rows - 0
 				) {
 					const currentNeighbor = grid[col + i][row + j].state;
 					if (currentNeighbor !== 3) {
 						numberOfNeighbors += currentNeighbor;
+					}
+				} else {
+					if (game.notGOL) {
+						// if outside of frame
+						return 6; // 3 neighbors means always alive in this case
 					}
 				}
 			}
@@ -300,17 +403,13 @@ let display = new Display();
 let game = new Game(new Board(new Algorithm()));
 game.board.grid = game.board.randomizeGrid();
 display.render(game.board.grid);
-game.progressBoard(1);
-game.progressBoard(1);
 
 // requestAnimationFrame(loop);
 
 function loop() {
-	game.progressBoard(1);
-	display.render(game.board.grid);
-	requestAnimationFrame(loop);
+	if (game.isLooped) {
+		game.progressBoard(1);
+		display.render(game.board.grid);
+		requestAnimationFrame(loop);
+	}
 }
-
-// TODO: fix issue with stop play button (Not possible to stop as of now, stacks)
-// TODO: Make redo button workable or scrap it as not really essential to function
-// TODO: Create short functions for instant cave and island making
