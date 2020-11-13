@@ -112,7 +112,7 @@ class Display {
 							[6, 7, 8],
 						]);
 						game.progressBoard(10);
-						game.board.makeIntoTerrain();
+						game.board.toggleTerrain();
 						this.render(game.board.grid);
 						break;
 					case this.buttons[9]: // instant isles
@@ -135,7 +135,7 @@ class Display {
 							[5, 6, 7, 8],
 						]);
 						game.progressBoard(10);
-						game.board.makeIntoTerrain();
+						game.board.toggleTerrain();
 						this.render(game.board.grid);
 						break;
 					case this.buttons[10]: // instant worms
@@ -157,7 +157,7 @@ class Display {
 							[5, 6, 7, 8],
 						]);
 						game.progressBoard(10);
-						game.board.makeIntoTerrain();
+						game.board.toggleTerrain();
 						this.render(game.board.grid);
 						break;
 				}

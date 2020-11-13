@@ -1,0 +1,27 @@
+{
+	"name": "cave-automata",
+	"version": "1.0.0",
+	"description": "JS implementation of game of live algorithm with a twist",
+	"main": "gol-oop.js",
+	"scripts": {
+		"deploy": "gh-pages -d dist"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/domison/JS_Cave-Automata.git"
+	},
+	"keywords": [
+		"JS",
+		"OOP",
+		"Cellular Automata"
+	],
+	"author": "Dominik Schmitt",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/domison/JS_Cave-Automata/issues"
+	},
+	"homepage": "https://doms.world",
+	"dependencies": {
+		"gh-pages": "^3.1.0"
+	}
+}
