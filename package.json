@@ -4,7 +4,8 @@
 	"description": "JS implementation of game of live algorithm with a twist",
 	"main": "gol-oop.js",
 	"scripts": {
-		"deploy": "gh-pages -d dist"
+		"build": "",
+		"deploy": "gh-pages -d out"
 	},
 	"repository": {
 		"type": "git",
